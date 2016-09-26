@@ -5,6 +5,7 @@ use osmesa_sys;
 use gleam::gl;
 
 use platform::NativeGLContextMethods;
+use GLSharedContext;
 
 const DUMMY_BUFFER_WIDTH: usize = 16;
 const DUMMY_BUFFER_HEIGHT: usize = 16;
@@ -68,8 +69,8 @@ impl NativeGLContextMethods for OSMesaContext {
         None
     }
 
-    fn create_shared(with: Option<&Self::Handle>) -> Result<Self, &'static str> {
-        Self::new(with.map(|w| w.0))
+    fn create_shared(with: Option<GLSharedContext<OSMesaContext>>) -> Result<Self, &'static str> {
+        Self::new(with.map(|w| w.handle.0))
     }
 
     fn is_current(&self) -> bool {

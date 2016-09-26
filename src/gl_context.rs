@@ -26,9 +26,8 @@ pub struct GLContext<Native> {
 }
 
 impl<Native> GLContext<Native>
-    where Native: NativeGLContextMethods
-{
-    pub fn create(shared_with: Option<&Native::Handle>) -> Result<GLContext<Native>, &'static str> {
+    where Native: NativeGLContextMethods {
+    pub fn create_shared(shared_with: Option<GLSharedContext<Native>>) -> Result<GLContext<Native>, &'static str> {
         let native_context = try!(Native::create_shared(shared_with));
         try!(native_context.make_current());
         let attributes = GLContextAttributes::any();
@@ -45,6 +44,9 @@ impl<Native> GLContext<Native>
         })
     }
 
+    pub fn create(shared_with: Option<&Native::Handle>) -> Result<GLContext<Native>, &'static str> {
+        Self::create_shared(shared_with.map(|s| GLSharedContext::new(s, None)))
+    }
 
     #[inline(always)]
     pub fn get_proc_address(addr: &str) -> *const () {
@@ -56,14 +58,14 @@ impl<Native> GLContext<Native>
         Native::current_handle()
     }
 
-    pub fn new(size: Size2D<i32>,
+    pub fn new_shared(size: Size2D<i32>,
                attributes: GLContextAttributes,
                color_attachment_type: ColorAttachmentType,
-               shared_with: Option<&Native::Handle>)
+               shared_with: Option<GLSharedContext<Native>>)
         -> Result<GLContext<Native>, &'static str> {
         // We create a headless context with a dummy size, we're painting to the
         // draw_buffer's framebuffer anyways.
-        let mut context = try!(Self::create(shared_with));
+        let mut context = try!(Self::create_shared(shared_with));
 
         context.formats = GLFormats::detect(&attributes);
         context.attributes = attributes;
@@ -71,6 +73,16 @@ impl<Native> GLContext<Native>
         try!(context.init_offscreen(size, color_attachment_type));
 
         Ok(context)
+    }
+
+    pub fn new(size: Size2D<i32>,
+               attributes: GLContextAttributes,
+               color_attachment_type: ColorAttachmentType,
+               shared_with: Option<&Native::Handle>)
+        -> Result<GLContext<Native>, &'static str> {
+
+        let shared_with = shared_with.map(|s| GLSharedContext::new(s, None));
+        GLContext::new_shared(size, attributes, color_attachment_type, shared_with)
     }
 
     #[inline(always)]
@@ -151,6 +163,23 @@ impl<Native> GLContext<Native>
     }
 }
 
+pub trait GLDispatcher {
+    fn dispatch(&self, Box<Fn() + Send>);
+}
+
+pub struct GLSharedContext<'a, Native> where Native: NativeGLContextMethods + 'a {
+    pub handle: &'a Native::Handle,
+    pub dispatcher: Option<Box<GLDispatcher>>
+} 
+
+impl<'a,Native> GLSharedContext<'a, Native> where Native: NativeGLContextMethods + 'a {
+    pub fn new(handle: &'a Native::Handle, dispatcher: Option<Box<GLDispatcher>>) -> GLSharedContext<'a, Native> {
+        GLSharedContext {
+            handle: handle,
+            dispatcher: dispatcher
+        }
+    }
+}
 
 trait GLContextPrivateMethods {
     fn init_offscreen(&mut self, Size2D<i32>, ColorAttachmentType) -> Result<(), &'static str>;

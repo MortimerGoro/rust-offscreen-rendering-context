@@ -1,3 +1,5 @@
+use GLSharedContext;
+
 pub trait NativeGLContextMethods: Sized {
     type Handle;
 
@@ -7,7 +9,7 @@ pub trait NativeGLContextMethods: Sized {
     fn current() -> Option<Self>;
     fn current_handle() -> Option<Self::Handle>;
 
-    fn create_shared(with: Option<&Self::Handle>) -> Result<Self, &'static str>;
+    fn create_shared(with: Option<GLSharedContext<Self>>) -> Result<Self, &'static str>;
 
     fn create_headless() -> Result<Self, &'static str> {
         Self::create_shared(None)

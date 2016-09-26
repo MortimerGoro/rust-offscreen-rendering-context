@@ -7,6 +7,7 @@ use euclid::Size2D;
 use super::utils::{create_offscreen_pixmap_backed_context};
 
 use platform::NativeGLContextMethods;
+use GLSharedContext;
 
 pub struct NativeGLContextHandle(pub GLXContext, pub *mut glx::types::Display);
 
@@ -102,8 +103,8 @@ impl NativeGLContextMethods for NativeGLContext {
         }
     }
 
-    fn create_shared(with: Option<&Self::Handle>) -> Result<NativeGLContext, &'static str> {
-        create_offscreen_pixmap_backed_context(Size2D::new(16, 16), with)
+    fn create_shared(with: Option<GLSharedContext<NativeGLContext>>) -> Result<NativeGLContext, &'static str> {
+        create_offscreen_pixmap_backed_context(Size2D::new(16, 16), with.map(|w| w.handle))
     }
 
     #[inline(always)]

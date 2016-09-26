@@ -1,6 +1,7 @@
 use euclid::Size2D;
 use platform::NativeGLContextMethods;
 use platform::with_egl::utils::{create_pixel_buffer_backed_offscreen_context};
+use GLSharedContext;
 use std::ffi::CString;
 use egl;
 use egl::types::{EGLint, EGLBoolean, EGLDisplay, EGLSurface, EGLConfig, EGLContext};
@@ -82,8 +83,8 @@ impl NativeGLContextMethods for NativeGLContext {
         create_pixel_buffer_backed_offscreen_context(Size2D::new(16, 16), None)
     }
 
-    fn create_shared(with: Option<&Self::Handle>) -> Result<NativeGLContext, &'static str> {
-        create_pixel_buffer_backed_offscreen_context(Size2D::new(16, 16), with)
+    fn create_shared(with: Option<GLSharedContext<NativeGLContext>>) -> Result<NativeGLContext, &'static str> {
+        create_pixel_buffer_backed_offscreen_context(Size2D::new(16, 16), with.map(|w| w.handle))
     }
 
     fn current_handle() -> Option<Self::Handle> {

@@ -7,6 +7,7 @@ use core_foundation::string::CFString;
 use std::str::FromStr;
 
 use platform::NativeGLContextMethods;
+use GLSharedContext;
 
 pub struct NativeGLContextHandle(CGLContextObj);
 
@@ -93,7 +94,7 @@ impl NativeGLContextMethods for NativeGLContext {
         }
     }
 
-    fn create_shared(with: Option<&Self::Handle>) -> Result<NativeGLContext, &'static str> {
+    fn create_shared(with: Option<GLSharedContext<NativeGLContext>>) -> Result<NativeGLContext, &'static str> {
         let mut attributes = [
             0
         ];
@@ -111,7 +112,7 @@ impl NativeGLContextMethods for NativeGLContext {
             }
         }
 
-        let result = NativeGLContext::new(with.map(|handle| &handle.0), &pixel_format);
+        let result = NativeGLContext::new(with.map(|w| &w.handle.0), &pixel_format);
 
         unsafe {
             if CGLDestroyPixelFormat(pixel_format) != 0 {

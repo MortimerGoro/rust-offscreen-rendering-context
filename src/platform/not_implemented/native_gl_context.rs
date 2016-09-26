@@ -1,4 +1,5 @@
 use NativeGLContextMethods;
+use GLSharedContext;
 
 pub struct NativeGLContext;
 pub struct NativeGLContextHandle;
@@ -10,7 +11,7 @@ impl NativeGLContextMethods for NativeGLContext {
         0 as *const ()
     }
 
-    fn create_shared(_with: Option<&Self::Handle>) -> Result<NativeGLContext, &'static str> {
+    fn create_shared(_with: Option<GLSharedContext<NativeGLContext>>) -> Result<NativeGLContext, &'static str> {
         Err("Not implemented (yet)")
     }
 
